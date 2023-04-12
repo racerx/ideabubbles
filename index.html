@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Bubbles</title>
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+            #container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .bubble {
+    background-color: #ffffff;
+    border: 2px solid #009000;
+    border-radius: 10px;
+    width: 100px;
+    height: 100px;
+    line-height: 100px;
+    margin: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+#header {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #009000;
+  margin-bottom: 2rem;
+}
+
+
+
+.popping {
+    animation: pop 0.3s linear forwards;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+    .bubble:hover {
+        transform: scale(1.1);
+    }
+
+    #inputForm {
+        position: fixed;
+        bottom: 20px;
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    #inputField {
+        padding: 5px;
+        border-radius: 3px;
+        border: 1px solid #cccccc;
+    }
+
+    #inputButton {
+        padding: 5px 10px;
+        border-radius: 3px;
+        border: 1px solid #cccccc;
+        background-color: #ffffff;
+        cursor: pointer;
+    }
+
+    #inputButton:hover {
+        background-color: #eeeeee;
+    }
+        
+    #clearButton {
+        padding: 5px 10px;
+        border-radius: 3px;
+        border: 1px solid #cccccc;
+        background-color: #ffffff;
+        cursor: pointer;
+    }
+
+    #clearButton:hover {
+        background-color: #eeeeee;
+    }
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    loadBubblesFromStorage();
+    document.getElementById("inputField").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            createBubble();
+        }
+    });
+});
+
+function loadBubblesFromStorage() {
+    let savedBubbles = JSON.parse(localStorage.getItem("bubbles"));
+
+    if (savedBubbles && Array.isArray(savedBubbles)) {
+        for (let value of savedBubbles) {
+            createNewBubble(value);
+        }
+    }
+}
+
+function saveBubblesToStorage() {
+    let bubbles = document.getElementsByClassName("bubble");
+    let bubbleValues = [];
+
+    for (let bubble of bubbles) {
+        bubbleValues.push(bubble.textContent);
+    }
+
+    localStorage.setItem("bubbles", JSON.stringify(bubbleValues));
+}
+
+function createBubble() {
+    let inputField = document.getElementById("inputField");
+    let inputValue = inputField.value;
+
+    if (inputValue.trim() === '') {
+        return;
+    }
+
+    let existingBubble = findExistingBubble(inputValue);
+
+    if (existingBubble) {
+        growBubble(existingBubble);
+    } else {
+        createNewBubble(inputValue);
+    }
+
+    inputField.value = '';
+    saveBubblesToStorage();
+}
+
+// ... (rest of the functions remain unchanged)
+
+function findExistingBubble(value) {
+    let bubbles = document.getElementsByClassName("bubble");
+
+    for (let i = 0; i < bubbles.length; i++) {
+        if (bubbles[i].textContent === value) {
+            return bubbles[i];
+        }
+    }
+
+    return null;
+}
+
+function growBubble(bubble) {
+    let currentSize = parseInt(window.getComputedStyle(bubble).getPropertyValue("width"));
+    let newSize = currentSize + 10;
+    bubble.style.width = newSize + "px";
+    bubble.style.height = newSize + "px";
+    bubble.style.lineHeight = newSize + "px";
+}
+
+function createNewBubble(value) {
+    let container = document.getElementById("container");
+
+    let bubble = document.createElement("div");
+    bubble.className = "bubble";
+   
+    bubble.style.borderRadius = "10px";
+    bubble.addEventListener("click", completeBubble);
+
+
+    let bubbleContent = document.createElement("div");
+    bubbleContent.className = "bubble-content";
+    bubbleContent.textContent = value;
+    bubble.style.fontSize = "1rem";
+    bubble.style.padding = "20px";
+    bubble.appendChild(bubbleContent);
+
+    container.appendChild(bubble);
+}
+
+function completeBubble() {
+    this.classList.add("popping");
+    setTimeout(() => {
+        this.remove();
+        saveBubblesToStorage();
+    }, 300);
+}
+
+function clearBubbles() {
+  let container = document.getElementById("container");
+  container.innerHTML = "";
+  localStorage.removeItem("bubbles");
+}
+
+// ... (rest of the functions remain unchanged)
+
+</script>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="inputForm">
+    <input id="inputField" type="text" placeholder="Enter your idea">
+    <button id="inputButton" onclick="createBubble()">Add</button>
+    <button id="clearButton" onclick="clearBubbles()">Clear All</button>   
+    </div>  
+    <div id="header">Where is my mind?</div>
+</body>
+</html>
